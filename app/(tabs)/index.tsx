@@ -8,7 +8,7 @@ import AddExpenseModal from '@/components/AddExpenseModal';
 import ExpenseTypeCard from '@/components/ExpenseTypeCard';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 import { APP_NAME, APP_SUBTITLE, LABELS, EXPENSE_TYPES, CURRENCY } from '@/constants/appConstants';
-import { databaseService } from '@/services/database';
+import { databaseService } from '@/services/databaseService';
 import { ExpenseType, ExpenseTypeData } from '@/types/expense';
 
 export default function HomeScreen() {

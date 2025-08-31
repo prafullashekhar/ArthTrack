@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { databaseService } from '@/services/database';
+import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
 import { useTheme } from '@/store/themeStore';
 import { EXPENSE_TYPES, CURRENCY, MESSAGES, ACTIONS } from '@/constants/appConstants';

@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
-import { databaseService } from '@/services/database';
+import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
 
 // Generate color variations based on expense type

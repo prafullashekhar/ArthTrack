@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
-import { databaseService } from '@/services/database';
+import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
 
 export default function AllocationScreen() {

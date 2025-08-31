@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { databaseService } from './database';
+import { databaseService } from './databaseService';
 
 export const useDatabaseInitialization = () => {
   const [isLoading, setIsLoading] = useState(true);

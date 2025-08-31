@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { databaseService } from '@/services/database';
+import { databaseService } from '@/services/databaseService';
 import { useTheme } from '@/store/themeStore';
 import { Ionicons } from '@expo/vector-icons';
 

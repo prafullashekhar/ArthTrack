@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
-import { databaseService } from '@/services/database';
+import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
 import { EXPENSE_TYPES } from '@/constants/appConstants';
 // import AddIcon from '@/images/add_icon.svg'; // Temporarily commented out

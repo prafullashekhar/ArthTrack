@@ -5,8 +5,7 @@ import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS, EXPENSE_TYPE_ICONS } from '@/constants/defaultCategories';
 import { ExpenseType } from '@/types/expense';
-import { databaseService } from '@/services/database';
-import { ExpenseWithDetails } from '@/services/database';
+import { databaseService, ExpenseWithDetails } from '@/services/databaseService';
 
 export default function HistoryScreen() {
   const [selectedFilter, setSelectedFilter] = useState<'all' | ExpenseType>('all');
