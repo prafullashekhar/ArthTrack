@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS, EXPENSE_TYPE_ICONS } from '@/constants/defaultCategories';
@@ -16,12 +16,28 @@ export default function HistoryScreen() {
   
   const [expenses, setExpenses] = useState<ExpenseWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [monthlyTotals, setMonthlyTotals] = useState({
+    need: 0,
+    want: 0,
+    total: 0
+  });
   
   const loadExpenses = async () => {
     try {
       setLoading(true);
       const allExpenses = await databaseService.getAllExpenses();
       setExpenses(allExpenses);
+      
+      // Calculate monthly totals
+      const monthId = parseInt(selectedMonth);
+      const needTotal = await databaseService.getTotalSpentByType('Need', monthId);
+      const wantTotal = await databaseService.getTotalSpentByType('Want', monthId);
+      
+      setMonthlyTotals({
+        need: needTotal,
+        want: wantTotal,
+        total: needTotal + wantTotal
+      });
     } catch (error) {
       console.error('Error loading expenses:', error);
     } finally {
@@ -29,9 +45,9 @@ export default function HistoryScreen() {
     }
   };
   
-  React.useEffect(() => {
+  useEffect(() => {
     loadExpenses();
-  }, []);
+  }, [selectedMonth]);
   
   const filteredExpenses = expenses
     .filter((expense) => {
@@ -63,6 +79,10 @@ export default function HistoryScreen() {
       month: 'long',
       year: 'numeric',
     });
+  };
+  
+  const formatAmount = (amount: number) => {
+    return `₹${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
   
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -184,28 +204,6 @@ export default function HistoryScreen() {
         </TouchableOpacity>
       </View>
       
-      <View style={styles.filterContainer}>
-        {(['all', 'Need', 'Want', 'Invest'] as const).map((filter) => (
-          <TouchableOpacity
-            key={filter}
-            style={[
-              styles.filterChip,
-              selectedFilter === filter && styles.filterChipActive,
-            ]}
-            onPress={() => setSelectedFilter(filter)}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedFilter === filter && styles.filterChipTextActive,
-              ]}
-            >
-              {filter === 'all' ? 'All' : filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      
       <FlatList
         data={filteredExpenses}
         renderItem={renderExpenseItem}
@@ -213,6 +211,65 @@ export default function HistoryScreen() {
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={() => (
+          <>
+            {/* Monthly Expense Summary Card */}
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryContent}>
+                <View style={styles.summaryRow}>
+                  <View style={styles.summaryItem}>
+                    <View style={[styles.summaryIcon, { backgroundColor: EXPENSE_TYPE_COLORS.Need.color + '20' }]}>
+                      <Ionicons name="medical-outline" size={20} color={EXPENSE_TYPE_COLORS.Need.color} />
+                    </View>
+                    <View style={styles.summaryTextContainer}>
+                      <Text style={styles.summaryLabel}>Need</Text>
+                      <Text style={styles.summaryAmount}>{formatAmount(monthlyTotals.need)}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.summaryItem}>
+                    <View style={[styles.summaryIcon, { backgroundColor: EXPENSE_TYPE_COLORS.Want.color + '20' }]}>
+                      <Ionicons name="gift-outline" size={20} color={EXPENSE_TYPE_COLORS.Want.color} />
+                    </View>
+                    <View style={styles.summaryTextContainer}>
+                      <Text style={styles.summaryLabel}>Want</Text>
+                      <Text style={styles.summaryAmount}>{formatAmount(monthlyTotals.want)}</Text>
+                    </View>
+                  </View>
+                </View>
+                
+                <View style={styles.totalDivider} />
+                
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Total Spent</Text>
+                  <Text style={styles.totalAmount}>{formatAmount(monthlyTotals.total)}</Text>
+                </View>
+              </View>
+            </View>
+            
+            <View style={styles.filterContainer}>
+              {(['all', 'Need', 'Want', 'Invest'] as const).map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.filterChip,
+                    selectedFilter === filter && styles.filterChipActive,
+                  ]}
+                  onPress={() => setSelectedFilter(filter)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedFilter === filter && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {filter === 'all' ? 'All' : filter}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
       />
     </SafeAreaView>
   );
@@ -253,6 +310,73 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+  },
+  summaryCard: {
+    backgroundColor: 'white',
+    marginBottom: 20,
+    borderRadius: 20,
+    padding: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  summaryContent: {
+    gap: 20,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  summaryItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  summaryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  summaryTextContainer: {
+    flex: 1,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+    marginBottom: 4,
+  },
+  summaryAmount: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  totalDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginVertical: 1,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 2,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  totalAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
   filterContainer: {
     flexDirection: 'row',
