@@ -14,6 +14,7 @@ interface ExpenseTypeCardProps {
 
 export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
   const progressPercentage = data.allocated > 0 ? (data.spent / data.allocated) * 100 : 0;
+  const isOverBudget = data.remaining < 0;
   
   const getTypeColors = (type: string): readonly [string, string] => {
     const typeData = EXPENSE_TYPE_COLORS[type as keyof typeof EXPENSE_TYPE_COLORS];
@@ -77,7 +78,10 @@ export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
         
         <View style={styles.bottomSection}>
           <View style={styles.amountSection}>
-            <Text style={styles.spentAmount}>
+            <Text style={[
+              styles.spentAmount,
+              data.remaining < 0 ? styles.negativeAmount : styles.positiveAmount
+            ]}>
               {CURRENCY.SYMBOL}{Number(data.remaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}
             </Text>
             <Text style={styles.totalAmount}>
@@ -92,14 +96,22 @@ export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
                   style={[
                     styles.progressFill, 
                     { 
-                      width: `${Math.min(progressPercentage, 100)}%`,
-                      backgroundColor: getTypeColors(data.type)[0]
+                      width: `${isOverBudget ? 100 : Math.min(progressPercentage, 100)}%`,
+                      backgroundColor: isOverBudget ? '#FF6B6B' : getTypeColors(data.type)[0]
                     }
                   ]} 
                 />
               </View>
             </View>
-            <Text style={styles.progressText}>{Math.round(progressPercentage)}% used</Text>
+            <Text style={[
+              styles.progressText,
+              isOverBudget ? styles.overBudgetText : {}
+            ]}>
+              {isOverBudget 
+                ? `Over by ${CURRENCY.SYMBOL}${Math.abs(data.remaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}`
+                : `${Math.round(progressPercentage)}% used`
+              }
+            </Text>
           </View>
         </View>
       </View>
@@ -164,8 +176,13 @@ const styles = StyleSheet.create({
   spentAmount: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 4,
+  },
+  positiveAmount: {
+    color: '#111827',
+  },
+  negativeAmount: {
+    color: '#FF6B6B',
   },
   totalAmount: {
     fontSize: 14,
@@ -196,5 +213,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     fontWeight: '500',
+  },
+  overBudgetText: {
+    color: '#FF6B6B',
+    fontWeight: '600',
   },
 });

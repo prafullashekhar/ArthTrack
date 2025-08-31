@@ -67,7 +67,7 @@ export default function HomeScreen() {
   const expenseTypesData: ExpenseTypeData[] = ([EXPENSE_TYPES.NEED, EXPENSE_TYPES.WANT, EXPENSE_TYPES.INVEST] as ExpenseType[]).map((type) => {
     const allocated = allocation[type];
     const spent = spentAmounts[type];
-    const remaining = Math.max(0, allocated - spent);
+    const remaining = allocated - spent; // Can be negative
     
     return {
       type,
@@ -81,7 +81,7 @@ export default function HomeScreen() {
   
   const totalAllocated = expenseTypesData.reduce((sum, data) => sum + data.allocated, 0);
   const totalSpent = expenseTypesData.reduce((sum, data) => sum + data.spent, 0);
-  const totalRemaining = expenseTypesData.reduce((sum, data) => sum + data.remaining, 0);
+  const totalRemaining = totalAllocated - totalSpent; // Can be negative
   
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -120,6 +120,14 @@ export default function HomeScreen() {
         </View>
         
         <View style={styles.summaryCard}>
+          {totalRemaining < 0 && (
+            <View style={styles.overBudgetWarning}>
+              <Ionicons name="warning" size={16} color="#FF6B6B" />
+              <Text style={styles.overBudgetText}>
+                Over Budget by {CURRENCY.SYMBOL}{Math.abs(totalRemaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}
+              </Text>
+            </View>
+          )}
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>{LABELS.TOTAL_BUDGET}</Text>
@@ -131,7 +139,12 @@ export default function HomeScreen() {
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>{LABELS.REMAINING}</Text>
-              <Text style={[styles.summaryValue, styles.remainingValue]}>{CURRENCY.SYMBOL}{Number(totalRemaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+              <Text style={[
+                styles.summaryValue, 
+                totalRemaining >= 0 ? styles.remainingValue : styles.negativeValue
+              ]}>
+                {CURRENCY.SYMBOL}{Number(totalRemaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}
+              </Text>
             </View>
           </View>
         </View>
@@ -256,6 +269,27 @@ const styles = StyleSheet.create({
   },
   remainingValue: {
     color: '#4ECDC4',
+  },
+  negativeValue: {
+    color: '#FF6B6B',
+  },
+  overBudgetWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF5F5',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  overBudgetText: {
+    color: '#FF6B6B',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   addExpenseButton: {
     marginHorizontal: 20,
