@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState, useCallback } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { router } from 'expo-router';
 import AddExpenseModal from '@/components/AddExpenseModal';
 import ExpenseTypeCard from '@/components/ExpenseTypeCard';
@@ -152,16 +152,14 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.addExpenseButton}
           onPress={() => setShowAddExpense(true)}
+          activeOpacity={0.8}
         >
-          <LinearGradient
-            colors={['#6366F1', '#8B5CF6']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.addExpenseGradient}
-          >
-            <Ionicons name="add" size={24} color="white" style={styles.addIcon} />
+          <View style={styles.addExpenseContent}>
+            <View style={styles.addIconContainer}>
+              <Ionicons name="add" size={20} color="#007AFF" />
+            </View>
             <Text style={styles.addExpenseText}>Add Expense</Text>
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
         
         <View style={styles.expenseTypes}>
@@ -294,23 +292,36 @@ const styles = StyleSheet.create({
   addExpenseButton: {
     marginHorizontal: 20,
     marginBottom: 24,
-    borderRadius: 20,
-    overflow: 'hidden',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  addExpenseGradient: {
+  addExpenseContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 20,
   },
-  addIcon: {
-    marginRight: 8,
+  addIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0F9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   addExpenseText: {
-    color: 'white',
+    color: '#1F2937',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   expenseTypes: {
     paddingHorizontal: 20,
