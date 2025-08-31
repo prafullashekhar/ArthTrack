@@ -6,6 +6,24 @@ import {
   expenseRepository 
 } from '../repositories';
 
+// Event emitter for data updates
+class DataUpdateEmitter {
+  private listeners: (() => void)[] = [];
+
+  subscribe(callback: () => void) {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
+  }
+
+  emit() {
+    this.listeners.forEach(listener => listener());
+  }
+}
+
+export const dataUpdateEmitter = new DataUpdateEmitter();
+
 // Re-export interfaces for convenience
 export type { Category } from '../repositories/categoryRepository';
 export type { PaymentType } from '../repositories/paymentTypeRepository';

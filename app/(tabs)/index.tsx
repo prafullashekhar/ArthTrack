@@ -10,6 +10,7 @@ import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 import { APP_NAME, APP_SUBTITLE, LABELS, EXPENSE_TYPES, CURRENCY } from '@/constants/appConstants';
 import { databaseService } from '@/services/databaseService';
 import { statsService } from '@/services/statsService';
+import { dataUpdateEmitter } from '@/services/databaseService';
 import { ExpenseType, ExpenseTypeData } from '@/types/expense';
 
 export default function HomeScreen() {
@@ -62,6 +63,14 @@ export default function HomeScreen() {
   
   useEffect(() => {
     loadData();
+    
+    // Subscribe to data updates
+    const unsubscribe = dataUpdateEmitter.subscribe(() => {
+      loadData();
+    });
+    
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, [loadData]);
   
   const expenseTypesData: ExpenseTypeData[] = ([EXPENSE_TYPES.NEED, EXPENSE_TYPES.WANT, EXPENSE_TYPES.INVEST] as ExpenseType[]).map((type) => {

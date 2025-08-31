@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { databaseService } from '@/services/databaseService';
+import { dataUpdateEmitter } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
 import { useTheme } from '@/store/themeStore';
 import { EXPENSE_TYPES, CURRENCY, MESSAGES, ACTIONS } from '@/constants/appConstants';
@@ -125,6 +126,9 @@ export default function AddExpenseModal({ visible, onClose }: AddExpenseModalPro
         split: numSplit,
         note: note.trim() || undefined,
       });
+      
+      // Trigger data update for real-time refresh
+      dataUpdateEmitter.emit();
       
       // Reset form and close modal
       resetForm();

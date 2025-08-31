@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { dataUpdateEmitter } from '../services/databaseService';
 
 export interface Allocation {
   id: number; // YYYYMM format
@@ -89,6 +90,9 @@ class AllocationRepository {
         [monthId, needAmount, wantAmount, investAmount]
       );
     }
+    
+    // Emit data update event
+    dataUpdateEmitter.emit();
   }
 
   async updateCurrentMonthAllocation(allocation: { need_amount: number, want_amount: number, invest_amount: number }): Promise<void> {

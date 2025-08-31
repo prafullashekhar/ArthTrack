@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, Text, ActivityIndicator } from "react-native";
 import { ThemeProvider } from "@/store/themeStore";
+import { DataUpdateProvider } from "@/store/dataUpdateContext";
 import { useDatabaseInitialization } from "@/services/databaseInit";
 
 SplashScreen.preventAutoHideAsync();
@@ -53,9 +54,11 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <RootLayoutNav />
-        </GestureHandlerRootView>
+        <DataUpdateProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </DataUpdateProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -5,20 +5,35 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/store/themeStore';
 import { statsService, AvailableBalance } from '@/services/statsService';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
+import { dataUpdateEmitter } from '@/services/databaseService';
 
 export default function StatsScreen() {
   const { theme } = useTheme();
   const [availableBalance, setAvailableBalance] = useState<AvailableBalance>({ need: 0, want: 0, total: 0 });
   const [totalInvested, setTotalInvested] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     loadStats();
+    
+    // Subscribe to data updates
+    const unsubscribe = dataUpdateEmitter.subscribe(() => {
+      loadStats(true); // Pass true to indicate this is an update
+    });
+    
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, []);
 
-  const loadStats = async () => {
+  const loadStats = async (isUpdate = false) => {
     try {
-      setLoading(true);
+      if (isUpdate) {
+        setUpdating(true);
+      } else {
+        setLoading(true);
+      }
+      
       const balance = await statsService.calculateTotalAvailableBalance();
       setAvailableBalance(balance);
       
@@ -28,7 +43,11 @@ export default function StatsScreen() {
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
-      setLoading(false);
+      if (isUpdate) {
+        setUpdating(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -65,8 +84,12 @@ export default function StatsScreen() {
               <Ionicons name="wallet-outline" size={24} color={theme.colors.primary} />
               <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Available Balance</Text>
             </View>
-            <TouchableOpacity onPress={loadStats} style={styles.refreshButton}>
-              <Ionicons name="refresh" size={20} color={theme.colors.primary} />
+            <TouchableOpacity onPress={() => loadStats(false)} style={styles.refreshButton}>
+              {updating ? (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              ) : (
+                <Ionicons name="refresh" size={20} color={theme.colors.primary} />
+              )}
             </TouchableOpacity>
           </View>
 
@@ -141,8 +164,12 @@ export default function StatsScreen() {
               <Ionicons name="trending-up" size={24} color={EXPENSE_TYPE_COLORS.Invest.color} />
               <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Total Investment</Text>
             </View>
-            <TouchableOpacity onPress={loadStats} style={styles.refreshButton}>
-              <Ionicons name="refresh" size={20} color={theme.colors.primary} />
+            <TouchableOpacity onPress={() => loadStats(false)} style={styles.refreshButton}>
+              {updating ? (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              ) : (
+                <Ionicons name="refresh" size={20} color={theme.colors.primary} />
+              )}
             </TouchableOpacity>
           </View>
 

@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { dataUpdateEmitter } from '../services/databaseService';
 
 export interface Expense {
   expense_id: number;
@@ -57,6 +58,10 @@ class ExpenseRepository {
       [expense.amount, expense.date, expense.expense_type, expense.category_id, 
        expense.payment_type_id, expense.split, expense.note || null]
     );
+    
+    // Emit data update event
+    dataUpdateEmitter.emit();
+    
     return result.lastInsertRowId;
   }
 
@@ -80,6 +85,9 @@ class ExpenseRepository {
       [expense.amount, expense.date, expense.expense_type, expense.category_id, 
        expense.payment_type_id, expense.split, expense.note || null, expenseId]
     );
+    
+    // Emit data update event
+    dataUpdateEmitter.emit();
   }
 
   async deleteExpense(expenseId: number): Promise<void> {
@@ -88,6 +96,9 @@ class ExpenseRepository {
       'DELETE FROM expense WHERE expense_id = ?',
       [expenseId]
     );
+    
+    // Emit data update event
+    dataUpdateEmitter.emit();
   }
 
   async getExpensesByMonth(monthId: number): Promise<ExpenseWithDetails[]> {
