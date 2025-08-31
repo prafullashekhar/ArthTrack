@@ -9,6 +9,7 @@ import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 export default function StatsScreen() {
   const { theme } = useTheme();
   const [availableBalance, setAvailableBalance] = useState<AvailableBalance>({ need: 0, want: 0, total: 0 });
+  const [totalInvested, setTotalInvested] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,6 +21,10 @@ export default function StatsScreen() {
       setLoading(true);
       const balance = await statsService.calculateTotalAvailableBalance();
       setAvailableBalance(balance);
+      
+      // Get total invested amount from all expenses
+      const totalInvestedAmount = await statsService.calculateTotalInvestment();
+      setTotalInvested(totalInvestedAmount);
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
@@ -125,6 +130,42 @@ export default function StatsScreen() {
           <View style={styles.cardFooter}>
             <Text style={[styles.cardFooterText, { color: theme.colors.textSecondary }]}>
               💡 Available balance = Total allocated - Total spent (previous months only)
+            </Text>
+          </View>
+        </View>
+
+        {/* Investment Card */}
+        <View style={[styles.investmentCard, { backgroundColor: theme.colors.surface }]}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleContainer}>
+              <Ionicons name="trending-up" size={24} color={EXPENSE_TYPE_COLORS.Invest.color} />
+              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Total Investment</Text>
+            </View>
+            <TouchableOpacity onPress={loadStats} style={styles.refreshButton}>
+              <Ionicons name="refresh" size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.investmentContent}>
+            <View style={styles.investmentAmountContainer}>
+              <Text style={[styles.investmentAmount, { color: EXPENSE_TYPE_COLORS.Invest.color }]}>
+                {formatAmount(totalInvested)}
+              </Text>
+              <Text style={[styles.investmentLabel, { color: theme.colors.textSecondary }]}>
+                Total Amount Invested
+              </Text>
+            </View>
+            
+            <View style={styles.investmentIconContainer}>
+              <View style={[styles.investmentIconBackground, { backgroundColor: `${EXPENSE_TYPE_COLORS.Invest.color}20` }]}>
+                <Ionicons name="rocket-outline" size={32} color={EXPENSE_TYPE_COLORS.Invest.color} />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.cardFooter}>
+            <Text style={[styles.cardFooterText, { color: theme.colors.textSecondary }]}>
+              💡 Total of all investment expenses across all months
             </Text>
           </View>
         </View>
@@ -287,5 +328,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  investmentCard: {
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  investmentContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  investmentAmountContainer: {
+    flex: 1,
+  },
+  investmentAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  investmentLabel: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  investmentIconContainer: {
+    marginLeft: 20,
+  },
+  investmentIconBackground: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

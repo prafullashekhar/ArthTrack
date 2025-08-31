@@ -78,6 +78,26 @@ class StatsService {
   }
 
   /**
+   * Calculate total amount invested across all months
+   * Total investment = Sum of all expenses with expense_type = 'Invest'
+   */
+  async calculateTotalInvestment(): Promise<number> {
+    try {
+      const allExpenses = await databaseService.getAllExpenses();
+      
+      // Sum all expenses with expense_type = 'Invest'
+      const totalInvestment = allExpenses
+        .filter(expense => expense.expense_type === 'Invest')
+        .reduce((sum, expense) => sum + (expense.amount / (expense.split || 1)), 0);
+      
+      return totalInvestment;
+    } catch (error) {
+      console.error('Error calculating total investment:', error);
+      return 0;
+    }
+  }
+
+  /**
    * Get allocation object for a specific month
    * Returns the allocation record with the largest ID that is less than or equal to the given month ID
    */
