@@ -102,7 +102,7 @@ repositories/
 - `getPaymentTypes()`, `addPaymentType()`, `updatePaymentType()`, etc.
 
 ### **Allocation Operations**
-- `getCurrentMonthAllocation()`, `setAllocation()`, `updateAllocation()`, etc.
+- `getCurrentMonthAllocation()`, `setAllocation()`, `updateCurrentMonthAllocation()`, etc.
 
 ### **Expense Operations**
 - `addExpense()`, `getExpensesByMonth()`, `getTotalSpentByType()`, etc.

@@ -7,10 +7,10 @@ import {
 } from '../repositories';
 
 // Re-export interfaces for convenience
-export type { Category } from './categoryService';
-export type { PaymentType } from './paymentTypeService';
-export type { Allocation } from './allocationService';
-export type { Expense, ExpenseWithDetails } from './expenseService';
+export type { Category } from '../repositories/categoryRepository';
+export type { PaymentType } from '../repositories/paymentTypeRepository';
+export type { Allocation } from '../repositories/allocationRepository';
+export type { Expense, ExpenseWithDetails } from '../repositories/expenseRepository';
 
 class DatabaseService {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -81,10 +81,9 @@ class DatabaseService {
   // ===============================
   getAllocation = allocationRepository.getAllocation.bind(allocationRepository);
   getCurrentMonthAllocation = allocationRepository.getCurrentMonthAllocation.bind(allocationRepository);
+  getMostRecentAllocationForMonth = allocationRepository.getMostRecentAllocationForMonth.bind(allocationRepository);
   setAllocation = allocationRepository.setAllocation.bind(allocationRepository);
-  updateAllocation = allocationRepository.updateAllocation.bind(allocationRepository);
   updateCurrentMonthAllocation = allocationRepository.updateCurrentMonthAllocation.bind(allocationRepository);
-  deleteAllocation = allocationRepository.deleteAllocation.bind(allocationRepository);
   getAllAllocations = allocationRepository.getAllAllocations.bind(allocationRepository);
   getCurrentMonthId = allocationRepository.getCurrentMonthId.bind(allocationRepository);
 

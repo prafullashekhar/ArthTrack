@@ -57,35 +57,44 @@ class AllocationRepository {
     return allocation;
   }
 
-  async setAllocation(monthId: number, needAmount: number, wantAmount: number, investAmount: number): Promise<void> {
+  async getMostRecentAllocationForMonth(monthId: number): Promise<Allocation | null> {
     if (!this.db) throw new Error('Database not initialized');
-    await this.db.runAsync(
-      `INSERT OR REPLACE INTO allocation (id, need_amount, want_amount, invest_amount) 
-       VALUES (?, ?, ?, ?)`,
-      [monthId, needAmount, wantAmount, investAmount]
-    );
+    
+    // Get the most recent allocation with ID smaller than or equal to the given month
+    const allocation = await this.db.getFirstAsync(
+      'SELECT * FROM allocation WHERE id <= ? ORDER BY id DESC LIMIT 1',
+      [monthId]
+    ) as Allocation | null;
+    
+    return allocation;
   }
 
-  async updateAllocation(monthId: number, needAmount: number, wantAmount: number, investAmount: number): Promise<void> {
+  async setAllocation(monthId: number, needAmount: number, wantAmount: number, investAmount: number): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
-    await this.db.runAsync(
-      'UPDATE allocation SET need_amount = ?, want_amount = ?, invest_amount = ? WHERE id = ?',
-      [needAmount, wantAmount, investAmount, monthId]
-    );
+    
+    // Check if entry already exists with this primary key
+    const existingAllocation = await this.getAllocation(monthId);
+    
+    if (existingAllocation) {
+      // Update existing record
+      await this.db.runAsync(
+        `UPDATE allocation SET need_amount = ?, want_amount = ?, invest_amount = ?, created_at = ? WHERE id = ?`,
+        [needAmount, wantAmount, investAmount, new Date().toISOString(), monthId]
+      );
+    } else {
+      // Create new record
+      await this.db.runAsync(
+        `INSERT INTO allocation (id, need_amount, want_amount, invest_amount) 
+         VALUES (?, ?, ?, ?)`,
+        [monthId, needAmount, wantAmount, investAmount]
+      );
+    }
   }
 
   async updateCurrentMonthAllocation(allocation: { need_amount: number, want_amount: number, invest_amount: number }): Promise<void> {
     const currentMonthId = this.getCurrentMonthId();
-    // Use setAllocation which handles INSERT OR REPLACE to ensure the record exists
+    // Always create a new entry for the current month
     await this.setAllocation(currentMonthId, allocation.need_amount, allocation.want_amount, allocation.invest_amount);
-  }
-
-  async deleteAllocation(monthId: number): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    await this.db.runAsync(
-      'DELETE FROM allocation WHERE id = ?',
-      [monthId]
-    );
   }
 
   async getAllAllocations(): Promise<Allocation[]> {

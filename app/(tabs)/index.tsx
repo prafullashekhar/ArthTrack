@@ -9,6 +9,7 @@ import ExpenseTypeCard from '@/components/ExpenseTypeCard';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 import { APP_NAME, APP_SUBTITLE, LABELS, EXPENSE_TYPES, CURRENCY } from '@/constants/appConstants';
 import { databaseService } from '@/services/databaseService';
+import { statsService } from '@/services/statsService';
 import { ExpenseType, ExpenseTypeData } from '@/types/expense';
 
 export default function HomeScreen() {
@@ -24,13 +25,23 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       
-      // Get current month allocation
-      const currentAllocation = await databaseService.getCurrentMonthAllocation();
-      setAllocation({
-        Need: currentAllocation.need_amount,
-        Want: currentAllocation.want_amount,
-        Invest: currentAllocation.invest_amount,
-      });
+      // Get allocation for current month using stats service
+      const currentAllocation = await statsService.getAllocationForMonth(currentMonthId);
+      
+      if (currentAllocation) {
+        setAllocation({
+          Need: currentAllocation.need_amount,
+          Want: currentAllocation.want_amount,
+          Invest: currentAllocation.invest_amount,
+        });
+      } else {
+        // If no allocation exists, set to 0
+        setAllocation({
+          Need: 0,
+          Want: 0,
+          Invest: 0,
+        });
+      }
       
       // Get spent amounts for each type
       const needSpent = await databaseService.getTotalSpentByType('Need', currentMonthId);

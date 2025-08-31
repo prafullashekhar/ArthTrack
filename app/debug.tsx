@@ -111,7 +111,7 @@ export default function DebugScreen() {
             Expenses ({expenses.length})
           </Text>
           {expenses.map((expense, index) => (
-            <View key={expense.id} style={[styles.item, { borderBottomColor: theme.colors.border }]}>
+            <View key={expense.expense_id} style={[styles.item, { borderBottomColor: theme.colors.border }]}>
               <View style={styles.itemHeader}>
                 <Text style={[styles.itemTitle, { color: theme.colors.text }]}>
                   {expense.note || 'No note'} - {expense.expense_type}
@@ -121,7 +121,7 @@ export default function DebugScreen() {
                 </Text>
               </View>
               <Text style={[styles.itemDetails, { color: theme.colors.textSecondary }]}>
-                Date: {formatDate(expense.date)} | Split: {expense.split} | ID: {expense.id}
+                Date: {formatDate(expense.date)} | Split: {expense.split} | ID: {expense.expense_id}
               </Text>
             </View>
           ))}
@@ -174,7 +174,7 @@ export default function DebugScreen() {
           {allocations.map((allocation) => (
             <View key={allocation.id} style={[styles.item, { borderBottomColor: theme.colors.border }]}>
               <Text style={[styles.itemTitle, { color: theme.colors.text }]}>
-                Month: {allocation.month_id}
+                Month: {allocation.id}
               </Text>
               <Text style={[styles.itemDetails, { color: theme.colors.textSecondary }]}>
                 Need: {formatAmount(allocation.need_amount)} | Want: {formatAmount(allocation.want_amount)} | Invest: {formatAmount(allocation.invest_amount)}
