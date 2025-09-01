@@ -17,9 +17,11 @@ import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
 import { EXPENSE_TYPES } from '@/constants/appConstants';
+import { useTheme } from '@/store/themeStore';
 // import AddIcon from '@/images/add_icon.svg'; // Temporarily commented out
 
 export default function CategoriesScreen() {
+  const { theme } = useTheme();
   const [selectedType, setSelectedType] = useState<ExpenseType>('Need');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -117,11 +119,18 @@ export default function CategoriesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen
         options={{
           title: 'Manage Categories',
           headerBackTitle: 'Settings',
+          headerStyle: {
+            backgroundColor: theme.colors.surface,
+          },
+          headerTintColor: theme.colors.text,
+          headerTitleStyle: {
+            color: theme.colors.text,
+          },
         }}
       />
       
@@ -131,6 +140,10 @@ export default function CategoriesScreen() {
             key={type}
             style={[
               styles.typeButton,
+              { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border
+              },
               selectedType === type && [
                 styles.typeButtonActive,
                 { backgroundColor: EXPENSE_TYPE_COLORS[type].color }
@@ -141,6 +154,7 @@ export default function CategoriesScreen() {
             <Text
               style={[
                 styles.typeButtonText,
+                { color: theme.colors.textSecondary },
                 selectedType === type && styles.typeButtonTextActive,
               ]}
             >
@@ -153,7 +167,7 @@ export default function CategoriesScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.sectionTitle}>{selectedType} Categories</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{selectedType} Categories</Text>
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: EXPENSE_TYPE_COLORS[selectedType].color }]}
               onPress={() => setShowAddModal(true)}
@@ -165,13 +179,13 @@ export default function CategoriesScreen() {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={EXPENSE_TYPE_COLORS[selectedType].color} />
-              <Text style={styles.loadingText}>Loading categories...</Text>
+              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading categories...</Text>
             </View>
           ) : (
             <>
               {categories.map((category) => (
-                <View key={category.id} style={styles.categoryItem}>
-                  <Text style={styles.categoryName}>{category.name}</Text>
+                <View key={category.id} style={[styles.categoryItem, { backgroundColor: theme.colors.surface }]}>
+                  <Text style={[styles.categoryName, { color: theme.colors.text }]}>{category.name}</Text>
                   <View style={styles.categoryActions}>
                     <TouchableOpacity
                       style={styles.actionButton}
@@ -191,8 +205,8 @@ export default function CategoriesScreen() {
               
               {categories.length === 0 && (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyText}>No categories found</Text>
-                  <Text style={styles.emptySubtext}>Add your first category to get started</Text>
+                  <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No categories found</Text>
+                  <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Add your first category to get started</Text>
                 </View>
               )}
             </>
@@ -207,21 +221,29 @@ export default function CategoriesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowAddModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Category</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { 
+            borderBottomColor: theme.colors.border,
+            backgroundColor: theme.colors.surface
+          }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Category</Text>
             <TouchableOpacity onPress={() => setShowAddModal(false)}>
-              <Text style={styles.cancelButton}>Cancel</Text>
+              <Text style={[styles.cancelButton, { color: theme.colors.primary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
           
           <View style={styles.modalContent}>
-            <Text style={styles.inputLabel}>Category Name</Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Category Name</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text
+              }]}
               value={newCategoryName}
               onChangeText={setNewCategoryName}
               placeholder="Enter category name"
+              placeholderTextColor={theme.colors.textSecondary}
               autoFocus
             />
             
@@ -249,21 +271,29 @@ export default function CategoriesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowEditModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Edit Category</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { 
+            borderBottomColor: theme.colors.border,
+            backgroundColor: theme.colors.surface
+          }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Edit Category</Text>
             <TouchableOpacity onPress={() => setShowEditModal(false)}>
-              <Text style={styles.cancelButton}>Cancel</Text>
+              <Text style={[styles.cancelButton, { color: theme.colors.primary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
           
           <View style={styles.modalContent}>
-            <Text style={styles.inputLabel}>Category Name</Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Category Name</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { 
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text
+              }]}
               value={newCategoryName}
               onChangeText={setNewCategoryName}
               placeholder="Enter category name"
+              placeholderTextColor={theme.colors.textSecondary}
               autoFocus
             />
             
@@ -290,7 +320,6 @@ export default function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   typeSelector: {
     flexDirection: 'row',
@@ -301,9 +330,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#e9ecef',
     alignItems: 'center',
   },
   typeButtonActive: {
@@ -312,7 +339,6 @@ const styles = StyleSheet.create({
   typeButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
   },
   typeButtonTextActive: {
     color: 'white',
@@ -332,7 +358,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   addButton: {
     width: 36,
@@ -345,7 +370,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'white',
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -357,7 +381,6 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 16,
-    color: '#333',
     flex: 1,
   },
   categoryActions: {
@@ -374,12 +397,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
   },
   loadingContainer: {
     alignItems: 'center',
@@ -388,12 +409,10 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -401,17 +420,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    backgroundColor: 'white',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   cancelButton: {
     fontSize: 16,
-    color: '#007AFF',
   },
   modalContent: {
     padding: 20,
@@ -419,13 +434,10 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#e9ecef',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,

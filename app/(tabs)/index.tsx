@@ -12,8 +12,10 @@ import { databaseService } from '@/services/databaseService';
 import { statsService } from '@/services/statsService';
 import { dataUpdateEmitter } from '@/services/databaseService';
 import { ExpenseType, ExpenseTypeData } from '@/types/expense';
+import { useTheme } from '@/store/themeStore';
 
 export default function HomeScreen() {
+  const { theme } = useTheme();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [allocation, setAllocation] = useState({ Need: 0, Want: 0, Invest: 0 });
@@ -99,7 +101,7 @@ export default function HomeScreen() {
   }, [loadData]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -108,29 +110,32 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View>
-              <Text style={styles.title}>{APP_NAME}</Text>
-              <Text style={styles.subtitle}>{APP_SUBTITLE}</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>{APP_NAME}</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>{APP_SUBTITLE}</Text>
             </View>
             <View style={styles.headerButtons}>
               <TouchableOpacity 
-                style={styles.debugButton}
+                style={[styles.debugButton, { backgroundColor: theme.colors.surface }]}
                 onPress={() => router.push('/debug')}
               >
-                <Ionicons name="bug" size={20} color="#666" />
+                <Ionicons name="bug" size={20} color={theme.colors.textSecondary} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.settingsButton}
+                style={[styles.settingsButton, { backgroundColor: theme.colors.surface }]}
                 onPress={() => router.push('/settings')}
               >
-                <Ionicons name="settings-outline" size={24} color="#666" />
+                <Ionicons name="settings-outline" size={24} color={theme.colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
         </View>
         
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
           {totalRemaining < 0 && (
-            <View style={styles.overBudgetWarning}>
+            <View style={[styles.overBudgetWarning, { 
+              backgroundColor: theme.isDark ? '#2D1B1B' : '#FFF5F5',
+              borderColor: theme.isDark ? '#4A2A2A' : '#FECACA'
+            }]}>
               <Ionicons name="warning" size={16} color="#FF6B6B" />
               <Text style={styles.overBudgetText}>
                 Over Budget by {CURRENCY.SYMBOL}{Math.abs(totalRemaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}
@@ -139,15 +144,15 @@ export default function HomeScreen() {
           )}
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{LABELS.TOTAL_BUDGET}</Text>
-              <Text style={styles.summaryValue}>{CURRENCY.SYMBOL}{Number(totalAllocated).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>{LABELS.TOTAL_BUDGET}</Text>
+              <Text style={[styles.summaryValue, { color: theme.colors.text }]}>{CURRENCY.SYMBOL}{Number(totalAllocated).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
             </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{LABELS.SPENT}</Text>
+                        <View style={styles.summaryItem}>
+              <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>{LABELS.SPENT}</Text>
               <Text style={[styles.summaryValue, styles.spentValue]}>{CURRENCY.SYMBOL}{Number(totalSpent).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{LABELS.REMAINING}</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>{LABELS.REMAINING}</Text>
               <Text style={[
                 styles.summaryValue, 
                 totalRemaining >= 0 ? styles.remainingValue : styles.negativeValue
@@ -159,15 +164,18 @@ export default function HomeScreen() {
         </View>
         
         <TouchableOpacity
-          style={styles.addExpenseButton}
+          style={[styles.addExpenseButton, { 
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border
+          }]}
           onPress={() => setShowAddExpense(true)}
           activeOpacity={0.8}
         >
           <View style={styles.addExpenseContent}>
-            <View style={styles.addIconContainer}>
-              <Ionicons name="add" size={20} color="#007AFF" />
+            <View style={[styles.addIconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
+              <Ionicons name="add" size={20} color={theme.colors.primary} />
             </View>
-            <Text style={styles.addExpenseText}>Add Expense</Text>
+            <Text style={[styles.addExpenseText, { color: theme.colors.text }]}>Add Expense</Text>
           </View>
         </TouchableOpacity>
         
@@ -192,7 +200,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollView: {
     flex: 1,
@@ -213,7 +220,6 @@ const styles = StyleSheet.create({
   debugButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'white',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -223,7 +229,6 @@ const styles = StyleSheet.create({
   settingsButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'white',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -233,15 +238,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
   },
   summaryCard: {
-    backgroundColor: 'white',
     marginHorizontal: 20,
     marginBottom: 24,
     borderRadius: 16,
@@ -261,7 +263,6 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -269,7 +270,6 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   spentValue: {
     color: '#FF6B6B',
@@ -301,7 +301,6 @@ const styles = StyleSheet.create({
   addExpenseButton: {
     marginHorizontal: 20,
     marginBottom: 24,
-    backgroundColor: 'white',
     borderRadius: 16,
     elevation: 2,
     shadowColor: '#000',
@@ -309,7 +308,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   addExpenseContent: {
     flexDirection: 'row',
@@ -322,13 +320,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F0F9FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   addExpenseText: {
-    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
   },

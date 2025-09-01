@@ -1,9 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { useTheme } from '@/store/themeStore';
 import { EXPENSE_TYPE_COLORS, EXPENSE_TYPE_ICONS } from '@/constants/defaultCategories';
 import { CURRENCY, LABELS } from '@/constants/appConstants';
 import { ExpenseTypeData } from '@/types/expense';
@@ -13,6 +12,7 @@ interface ExpenseTypeCardProps {
 }
 
 export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
+  const { theme } = useTheme();
   const progressPercentage = data.allocated > 0 ? (data.spent / data.allocated) * 100 : 0;
   const isOverBudget = data.remaining < 0;
   
@@ -59,7 +59,10 @@ export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
 
   return (
     <Pressable onPress={handlePress} style={styles.container}>
-      <View style={[styles.card, { borderLeftColor: getTypeColors(data.type)[0] }]}>
+      <View style={[styles.card, { 
+        backgroundColor: theme.colors.surface,
+        borderLeftColor: getTypeColors(data.type)[0] 
+      }]}>
         <View style={styles.cardHeader}>
             <View style={[styles.iconContainer, { backgroundColor: iconBackgroundColor }]}>
               {React.createElement(EXPENSE_TYPE_ICONS[data.type], {
@@ -70,28 +73,28 @@ export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
               })}
             </View>
           <View style={styles.titleSection}>
-            <Text style={styles.title}>{data.type}</Text>
-            <Text style={styles.description}>{getTypeDescription(data.type)}</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>{data.type}</Text>
+            <Text style={[styles.description, { color: theme.colors.textSecondary }]}>{getTypeDescription(data.type)}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
         </View>
         
         <View style={styles.bottomSection}>
           <View style={styles.amountSection}>
             <Text style={[
               styles.spentAmount,
-              data.remaining < 0 ? styles.negativeAmount : styles.positiveAmount
+              { color: data.remaining < 0 ? '#FF6B6B' : theme.colors.text }
             ]}>
               {CURRENCY.SYMBOL}{Number(data.remaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}
             </Text>
-            <Text style={styles.totalAmount}>
+            <Text style={[styles.totalAmount, { color: theme.colors.textSecondary }]}>
               of {CURRENCY.SYMBOL}{Number(data.allocated).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}
             </Text>
           </View>
           
           <View style={styles.progressSection}>
             <View style={styles.progressContainer}>
-              <View style={styles.progressBackground}>
+              <View style={[styles.progressBackground, { backgroundColor: theme.colors.border }]}>
                 <View 
                   style={[
                     styles.progressFill, 
@@ -105,6 +108,7 @@ export default function ExpenseTypeCard({ data }: ExpenseTypeCardProps) {
             </View>
             <Text style={[
               styles.progressText,
+              { color: theme.colors.textSecondary },
               isOverBudget ? styles.overBudgetText : {}
             ]}>
               {isOverBudget 
@@ -124,7 +128,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: 'white',
     padding: 20,
     borderRadius: 20,
     borderLeftWidth: 4,
@@ -157,12 +160,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
     marginBottom: 2,
   },
   description: {
     fontSize: 12,
-    color: '#9CA3AF',
     fontWeight: '400',
   },
   bottomSection: {
@@ -178,15 +179,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  positiveAmount: {
-    color: '#111827',
-  },
-  negativeAmount: {
-    color: '#FF6B6B',
-  },
+
   totalAmount: {
     fontSize: 14,
-    color: '#6B7280',
     fontWeight: '400',
   },
   progressSection: {
@@ -201,7 +196,6 @@ const styles = StyleSheet.create({
   },
   progressBackground: {
     height: 8,
-    backgroundColor: '#E5E7EB',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -211,7 +205,6 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    color: '#6B7280',
     fontWeight: '500',
   },
   overBudgetText: {

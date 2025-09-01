@@ -4,17 +4,20 @@ import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { APP_NAME } from '@/constants/appConstants';
+import { useTheme } from '@/store/themeStore';
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+  
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: 'white',
+          backgroundColor: theme.colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#E5E5EA',
+          borderTopColor: theme.colors.border,
           paddingBottom: 8,
           paddingTop: 8,
           height: 88,
@@ -22,6 +25,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
+          color: theme.colors.textSecondary,
         },
         headerShown: false,
       }}

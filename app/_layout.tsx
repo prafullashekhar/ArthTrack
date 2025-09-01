@@ -4,7 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, Text, ActivityIndicator } from "react-native";
-import { ThemeProvider } from "@/store/themeStore";
+import { ThemeProvider, useTheme } from "@/store/themeStore";
 import { DataUpdateProvider } from "@/store/dataUpdateContext";
 import { useDatabaseInitialization } from "@/services/databaseInit";
 
@@ -13,8 +13,21 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
+  const { theme } = useTheme();
+  
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
+    <Stack 
+      screenOptions={{ 
+        headerBackTitle: "Back",
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          color: theme.colors.text,
+        },
+      }}
+    >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ presentation: "modal" }} />
       <Stack.Screen name="allocation" options={{ presentation: "modal" }} />

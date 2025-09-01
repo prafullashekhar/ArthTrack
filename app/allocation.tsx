@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
+import { useTheme } from '@/store/themeStore';
 
 export default function AllocationScreen() {
+  const { theme } = useTheme();
   const [allocations, setAllocations] = useState({
     Need: '0',
     Want: '0',
@@ -71,43 +73,49 @@ export default function AllocationScreen() {
   }, 0);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Monthly Allocation</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { 
+        backgroundColor: theme.colors.surface,
+        borderBottomColor: theme.colors.border
+      }]}>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Monthly Allocation</Text>
       </View>
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.description}>
+          <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
             Set your monthly budget allocation for each expense type. This will help you track your spending limits.
           </Text>
           
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text style={styles.loadingText}>Loading allocation...</Text>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading allocation...</Text>
             </View>
           ) : (
             <>
               {(['Need', 'Want', 'Invest'] as ExpenseType[]).map((type) => (
-            <View key={type} style={styles.allocationItem}>
+            <View key={type} style={[styles.allocationItem, { backgroundColor: theme.colors.surface }]}>
               <View style={styles.allocationHeader}>
                 <View style={[
                   styles.typeIndicator,
                   { backgroundColor: EXPENSE_TYPE_COLORS[type].color }
                 ]} />
-                <Text style={styles.typeTitle}>{type}</Text>
+                <Text style={[styles.typeTitle, { color: theme.colors.text }]}>{type}</Text>
               </View>
               
-              <View style={styles.inputContainer}>
-                <Text style={styles.currencySymbol}>₹</Text>
+              <View style={[styles.inputContainer, { 
+                backgroundColor: theme.colors.background,
+                borderColor: theme.colors.border
+              }]}>
+                <Text style={[styles.currencySymbol, { color: theme.colors.text }]}>₹</Text>
                 <TextInput
-                  style={styles.amountInput}
+                  style={[styles.amountInput, { color: theme.colors.text }]}
                   value={allocations[type]}
                   onChangeText={(value) => setAllocations(prev => ({ ...prev, [type]: value }))}
                   placeholder="0"
                   keyboardType="numeric"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={theme.colors.textSecondary}
                 />
               </View>
             </View>
@@ -122,7 +130,10 @@ export default function AllocationScreen() {
         </View>
       </ScrollView>
       
-      <View style={styles.footer}>
+      <View style={[styles.footer, { 
+        borderTopColor: theme.colors.border,
+        backgroundColor: theme.colors.surface
+      }]}>
         <TouchableOpacity 
           style={[styles.saveButton, saving && styles.saveButtonDisabled]} 
           onPress={handleSave}
@@ -141,7 +152,6 @@ export default function AllocationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollView: {
     flex: 1,
@@ -151,13 +161,11 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#666',
     lineHeight: 24,
     marginBottom: 32,
     textAlign: 'center',
   },
   allocationItem: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -181,28 +189,23 @@ const styles = StyleSheet.create({
   typeTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e9ecef',
     paddingHorizontal: 16,
   },
   currencySymbol: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
     marginRight: 8,
   },
   amountInput: {
     flex: 1,
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
     paddingVertical: 16,
   },
   totalContainer: {
@@ -226,8 +229,6 @@ const styles = StyleSheet.create({
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    backgroundColor: 'white',
   },
   saveButton: {
     backgroundColor: '#007AFF',
@@ -253,20 +254,16 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
   },
   header: {
     paddingTop: 40,
     paddingBottom: 10,
-    backgroundColor: 'white',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
   },
 });

@@ -6,8 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS, EXPENSE_TYPE_ICONS } from '@/constants/defaultCategories';
 import { ExpenseType } from '@/types/expense';
 import { databaseService, ExpenseWithDetails } from '@/services/databaseService';
+import { dataUpdateEmitter } from '@/services/databaseService';
+import { useTheme } from '@/store/themeStore';
 
 export default function HistoryScreen() {
+  const { theme } = useTheme();
   const [selectedFilter, setSelectedFilter] = useState<'all' | ExpenseType>('all');
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -47,6 +50,14 @@ export default function HistoryScreen() {
   
   useEffect(() => {
     loadExpenses();
+    
+    // Subscribe to data updates
+    const unsubscribe = dataUpdateEmitter.subscribe(() => {
+      loadExpenses();
+    });
+    
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, [selectedMonth]);
   
   const filteredExpenses = expenses
@@ -124,7 +135,7 @@ export default function HistoryScreen() {
   };
   
   const renderExpenseItem = ({ item }: { item: ExpenseWithDetails }) => (
-    <View style={styles.expenseItem}>
+    <View style={[styles.expenseItem, { backgroundColor: theme.colors.surface }]}>
       <View style={styles.expenseHeader}>
         <View style={styles.expenseInfo}>
           <View style={styles.categoryRow}>
@@ -135,7 +146,7 @@ export default function HistoryScreen() {
                 fill: EXPENSE_TYPE_COLORS[item.expense_type as ExpenseType].color
               })}
             </View>
-            <Text style={styles.expenseCategory}>{item.category_name}</Text>
+            <Text style={[styles.expenseCategory, { color: theme.colors.text }]}>{item.category_name}</Text>
           </View>
           <View style={styles.expenseMetadata}>
             <View style={[
@@ -144,19 +155,22 @@ export default function HistoryScreen() {
             ]}>
               <Text style={styles.typeBadgeText}>{item.expense_type}</Text>
             </View>
-            <Text style={styles.expenseDate}>{formatDate(item.date)}</Text>
+            <Text style={[styles.expenseDate, { color: theme.colors.textSecondary }]}>{formatDate(item.date)}</Text>
             {item.payment_type_name && (
-              <Text style={styles.paymentType}>{item.payment_type_name}</Text>
+              <Text style={[styles.paymentType, { 
+                color: theme.colors.textSecondary,
+                backgroundColor: theme.colors.border
+              }]}>{item.payment_type_name}</Text>
             )}
           </View>
           {item.note && (
-            <Text style={styles.expenseNote}>{item.note}</Text>
+            <Text style={[styles.expenseNote, { color: theme.colors.textSecondary }]}>{item.note}</Text>
           )}
         </View>
         <View style={styles.expenseRight}>
-          <Text style={styles.expenseAmount}>₹{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+          <Text style={[styles.expenseAmount, { color: theme.colors.text }]}>₹{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
           {item.split > 1 && (
-            <Text style={styles.splitText}>Split: {item.split}</Text>
+            <Text style={[styles.splitText, { color: theme.colors.textSecondary }]}>Split: {item.split}</Text>
           )}
           <TouchableOpacity
             style={styles.deleteButton}
@@ -171,9 +185,9 @@ export default function HistoryScreen() {
   
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="calendar-outline" size={64} color="#ccc" />
-      <Text style={styles.emptyTitle}>No expenses found</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="calendar-outline" size={64} color={theme.colors.textSecondary} />
+      <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No expenses found</Text>
+      <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
         {selectedFilter === 'all' 
           ? 'Start adding expenses to see them here'
           : `No ${selectedFilter} expenses found`
@@ -183,24 +197,24 @@ export default function HistoryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Expense History</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Expense History</Text>
       </View>
       
       <View style={styles.monthSelector}>
         <TouchableOpacity
-          style={styles.monthNavButton}
+          style={[styles.monthNavButton, { backgroundColor: theme.colors.surface }]}
           onPress={() => navigateMonth('prev')}
         >
-          <Ionicons name="chevron-back-outline" size={20} color="#666" />
+          <Ionicons name="chevron-back-outline" size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.monthText}>{formatMonthYear(selectedMonth)}</Text>
+        <Text style={[styles.monthText, { color: theme.colors.text }]}>{formatMonthYear(selectedMonth)}</Text>
         <TouchableOpacity
-          style={styles.monthNavButton}
+          style={[styles.monthNavButton, { backgroundColor: theme.colors.surface }]}
           onPress={() => navigateMonth('next')}
         >
-          <Ionicons name="chevron-forward-outline" size={20} color="#666" />
+          <Ionicons name="chevron-forward-outline" size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
       </View>
       
@@ -214,7 +228,7 @@ export default function HistoryScreen() {
         ListHeaderComponent={() => (
           <>
             {/* Monthly Expense Summary Card */}
-            <View style={styles.summaryCard}>
+            <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
               <View style={styles.summaryContent}>
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryItem}>
@@ -222,8 +236,8 @@ export default function HistoryScreen() {
                       <Ionicons name="medical-outline" size={20} color={EXPENSE_TYPE_COLORS.Need.color} />
                     </View>
                     <View style={styles.summaryTextContainer}>
-                      <Text style={styles.summaryLabel}>Need</Text>
-                      <Text style={styles.summaryAmount}>{formatAmount(monthlyTotals.need)}</Text>
+                      <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Need</Text>
+                      <Text style={[styles.summaryAmount, { color: theme.colors.text }]}>{formatAmount(monthlyTotals.need)}</Text>
                     </View>
                   </View>
                   
@@ -232,17 +246,17 @@ export default function HistoryScreen() {
                       <Ionicons name="gift-outline" size={20} color={EXPENSE_TYPE_COLORS.Want.color} />
                     </View>
                     <View style={styles.summaryTextContainer}>
-                      <Text style={styles.summaryLabel}>Want</Text>
-                      <Text style={styles.summaryAmount}>{formatAmount(monthlyTotals.want)}</Text>
+                      <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Want</Text>
+                      <Text style={[styles.summaryAmount, { color: theme.colors.text }]}>{formatAmount(monthlyTotals.want)}</Text>
                     </View>
                   </View>
                 </View>
                 
-                <View style={styles.totalDivider} />
+                <View style={[styles.totalDivider, { backgroundColor: theme.colors.border }]} />
                 
                 <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>Total Spent</Text>
-                  <Text style={styles.totalAmount}>{formatAmount(monthlyTotals.total)}</Text>
+                  <Text style={[styles.totalLabel, { color: theme.colors.textSecondary }]}>Total Spent</Text>
+                  <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>{formatAmount(monthlyTotals.total)}</Text>
                 </View>
               </View>
             </View>
@@ -253,6 +267,10 @@ export default function HistoryScreen() {
                   key={filter}
                   style={[
                     styles.filterChip,
+                    { 
+                      backgroundColor: theme.colors.surface,
+                      borderColor: theme.colors.border
+                    },
                     selectedFilter === filter && styles.filterChipActive,
                   ]}
                   onPress={() => setSelectedFilter(filter)}
@@ -260,6 +278,7 @@ export default function HistoryScreen() {
                   <Text
                     style={[
                       styles.filterChipText,
+                      { color: theme.colors.textSecondary },
                       selectedFilter === filter && styles.filterChipTextActive,
                     ]}
                   >
@@ -278,7 +297,6 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     padding: 20,
@@ -287,7 +305,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
   },
   monthSelector: {
     flexDirection: 'row',
@@ -299,7 +316,6 @@ const styles = StyleSheet.create({
   monthNavButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: 'white',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -309,10 +325,8 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
   },
   summaryCard: {
-    backgroundColor: 'white',
     marginBottom: 20,
     borderRadius: 20,
     padding: 20,
@@ -349,17 +363,14 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
     marginBottom: 4,
   },
   summaryAmount: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333',
   },
   totalDivider: {
     height: 1,
-    backgroundColor: '#F0F0F0',
     marginVertical: 1,
   },
   totalRow: {
@@ -371,7 +382,6 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
   },
   totalAmount: {
     fontSize: 24,
@@ -388,9 +398,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#e9ecef',
   },
   filterChipActive: {
     backgroundColor: '#007AFF',
@@ -399,7 +407,6 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
   },
   filterChipTextActive: {
     color: 'white',
@@ -409,7 +416,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   expenseItem: {
-    backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -442,7 +448,6 @@ const styles = StyleSheet.create({
   expenseCategory: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
   },
   expenseMetadata: {
     flexDirection: 'row',
@@ -462,19 +467,15 @@ const styles = StyleSheet.create({
   },
   expenseDate: {
     fontSize: 12,
-    color: '#666',
   },
   paymentType: {
     fontSize: 10,
-    color: '#999',
-    backgroundColor: '#f0f0f0',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
   },
   expenseNote: {
     fontSize: 12,
-    color: '#888',
     fontStyle: 'italic',
     marginTop: 4,
   },
@@ -484,7 +485,6 @@ const styles = StyleSheet.create({
   },
   splitText: {
     fontSize: 10,
-    color: '#666',
   },
   deleteButton: {
     padding: 4,
@@ -493,7 +493,6 @@ const styles = StyleSheet.create({
   expenseAmount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   emptyState: {
     alignItems: 'center',
@@ -503,13 +502,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#666',
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#999',
     textAlign: 'center',
     paddingHorizontal: 40,
   },

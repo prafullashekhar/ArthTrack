@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
+  ActivityIndicator,
   FlatList,
   Modal,
   StyleSheet,
@@ -12,25 +13,48 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useExpenseStore } from '@/store/expenseStore';
-import { PaymentType } from '@/types/expense';
+import { databaseService } from '@/services/databaseService';
+import { dataUpdateEmitter } from '@/services/databaseService';
+import { PaymentType } from '@/repositories/paymentTypeRepository';
+import { useTheme } from '@/store/themeStore';
 // import AddIcon from '@/images/add_icon.svg'; // Temporarily commented out
 
 export default function PaymentTypesScreen() {
+  const { theme } = useTheme();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPaymentType, setEditingPaymentType] = useState<PaymentType | null>(null);
   const [paymentTypeName, setPaymentTypeName] = useState('');
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const {
-    getPaymentTypes,
-    addPaymentType,
-    updatePaymentType,
-    deletePaymentType,
-  } = useExpenseStore();
+  const loadPaymentTypes = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading payment types...');
+      const types = await databaseService.getPaymentTypes();
+      console.log('Payment types loaded:', types);
+      setPaymentTypes(types);
+    } catch (error) {
+      console.error('Error loading payment types:', error);
+      Alert.alert('Error', `Failed to load payment types: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const paymentTypes = getPaymentTypes();
+  useEffect(() => {
+    loadPaymentTypes();
+  }, []);
   
-  const handleAddPaymentType = () => {
+  // Subscribe to data updates
+  useEffect(() => {
+    const unsubscribe = dataUpdateEmitter.subscribe(() => {
+      loadPaymentTypes();
+    });
+    return unsubscribe;
+  }, []);
+  
+  const handleAddPaymentType = async () => {
     if (!paymentTypeName.trim()) {
       Alert.alert('Error', 'Please enter a payment type name');
       return;
@@ -41,12 +65,20 @@ export default function PaymentTypesScreen() {
       return;
     }
     
-    addPaymentType(paymentTypeName.trim());
-    setPaymentTypeName('');
-    setShowAddModal(false);
+    try {
+      console.log('Adding payment type:', paymentTypeName.trim());
+      await databaseService.addPaymentType(paymentTypeName.trim());
+      console.log('Payment type added successfully');
+      dataUpdateEmitter.emit();
+      setPaymentTypeName('');
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding payment type:', error);
+      Alert.alert('Error', `Failed to add payment type: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
   
-  const handleEditPaymentType = () => {
+  const handleEditPaymentType = async () => {
     if (!editingPaymentType || !paymentTypeName.trim()) {
       Alert.alert('Error', 'Please enter a payment type name');
       return;
@@ -57,9 +89,17 @@ export default function PaymentTypesScreen() {
       return;
     }
     
-    updatePaymentType(editingPaymentType.id, paymentTypeName.trim());
-    setPaymentTypeName('');
-    setEditingPaymentType(null);
+    try {
+      console.log('Updating payment type:', editingPaymentType.id, paymentTypeName.trim());
+      await databaseService.updatePaymentType(editingPaymentType.id, paymentTypeName.trim());
+      console.log('Payment type updated successfully');
+      dataUpdateEmitter.emit();
+      setPaymentTypeName('');
+      setEditingPaymentType(null);
+    } catch (error) {
+      console.error('Error updating payment type:', error);
+      Alert.alert('Error', `Failed to update payment type: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
   
   const handleDeletePaymentType = (paymentType: PaymentType) => {
@@ -76,7 +116,17 @@ export default function PaymentTypesScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deletePaymentType(paymentType.id),
+          onPress: async () => {
+            try {
+              console.log('Deleting payment type:', paymentType.id);
+              await databaseService.deletePaymentType(paymentType.id);
+              console.log('Payment type deleted successfully');
+              dataUpdateEmitter.emit();
+            } catch (error) {
+              console.error('Error deleting payment type:', error);
+              Alert.alert('Error', `Failed to delete payment type: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+          },
         },
       ]
     );
@@ -94,8 +144,8 @@ export default function PaymentTypesScreen() {
   };
   
   const renderPaymentTypeItem = ({ item }: { item: PaymentType }) => (
-    <View style={styles.paymentTypeItem}>
-      <Text style={styles.paymentTypeName}>{item.name}</Text>
+    <View style={[styles.paymentTypeItem, { backgroundColor: theme.colors.surface }]}>
+      <Text style={[styles.paymentTypeName, { color: theme.colors.text }]}>{item.name}</Text>
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.editButton}
@@ -120,29 +170,39 @@ export default function PaymentTypesScreen() {
       presentationStyle="pageSheet"
       onRequestClose={closeModal}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>
+      <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.modalHeader, { 
+          borderBottomColor: theme.colors.border,
+          backgroundColor: theme.colors.surface
+        }]}>
+          <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
             {editingPaymentType ? 'Edit Payment Type' : 'Add Payment Type'}
           </Text>
           <TouchableOpacity onPress={closeModal}>
-            <Text style={styles.cancelButton}>Cancel</Text>
+            <Text style={[styles.cancelButton, { color: theme.colors.primary }]}>Cancel</Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.modalContent}>
-          <Text style={styles.inputLabel}>Payment Type Name</Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Payment Type Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { 
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              color: theme.colors.text
+            }]}
             value={paymentTypeName}
             onChangeText={setPaymentTypeName}
             placeholder="Enter payment type name"
-            placeholderTextColor="#999"
+            placeholderTextColor={theme.colors.textSecondary}
             autoFocus
           />
         </View>
         
-        <View style={styles.modalFooter}>
+        <View style={[styles.modalFooter, { 
+          borderTopColor: theme.colors.border,
+          backgroundColor: theme.colors.surface
+        }]}>
           <TouchableOpacity
             style={[
               styles.saveButton,
@@ -161,9 +221,9 @@ export default function PaymentTypesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.subtitle}>Manage your payment methods</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Manage your payment methods</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowAddModal(true)}
@@ -173,13 +233,20 @@ export default function PaymentTypesScreen() {
         </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={paymentTypes}
-        renderItem={renderPaymentTypeItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading payment types...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={paymentTypes}
+          renderItem={renderPaymentTypeItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
       
       {renderModal()}
     </SafeAreaView>
@@ -189,7 +256,6 @@ export default function PaymentTypesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     padding: 20,
@@ -197,7 +263,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 16,
   },
   addButton: {
@@ -219,7 +284,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   paymentTypeItem: {
-    backgroundColor: 'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -235,7 +299,6 @@ const styles = StyleSheet.create({
   paymentTypeName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
     flex: 1,
   },
   actions: {
@@ -250,7 +313,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'white',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -258,16 +320,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   cancelButton: {
     fontSize: 16,
-    color: '#007AFF',
   },
   modalContent: {
     flex: 1,
@@ -276,23 +335,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 12,
   },
   input: {
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e9ecef',
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#333',
   },
   modalFooter: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
   },
   saveButton: {
     backgroundColor: '#007AFF',
@@ -307,5 +361,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    textAlign: 'center',
   },
 });

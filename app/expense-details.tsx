@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EXPENSE_TYPE_COLORS } from '@/constants/defaultCategories';
 import { databaseService } from '@/services/databaseService';
 import { ExpenseType } from '@/types/expense';
+import { useTheme } from '@/store/themeStore';
 
 // Generate color variations based on expense type
 const generateCategoryColors = (baseColor: string, count: number): string[] => {
@@ -28,7 +29,15 @@ const generateCategoryColors = (baseColor: string, count: number): string[] => {
   return colors;
 };
 
+// Function to determine text color based on background color and theme
+const getHeaderTextColor = (backgroundColor: string, isDark: boolean): string => {
+  // For the bright expense type colors (green, orange, blue), white text provides the best contrast
+  // These colors are bright enough to ensure good readability in both light and dark themes
+  return '#FFFFFF';
+};
+
 export default function ExpenseDetailsScreen() {
+  const { theme } = useTheme();
   const { type } = useLocalSearchParams<{ type: ExpenseType }>();
   const [allocated, setAllocated] = useState(0);
   const [spent, setSpent] = useState(0);
@@ -101,27 +110,41 @@ export default function ExpenseDetailsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Stack.Screen
           options={{
             title: `${type} Details`,
             headerBackTitle: 'Home',
+            headerStyle: {
+              backgroundColor: theme.colors.surface,
+            },
+            headerTintColor: theme.colors.text,
+            headerTitleStyle: {
+              color: theme.colors.text,
+            },
           }}
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={EXPENSE_TYPE_COLORS[type].color} />
-          <Text style={styles.loadingText}>Loading {type} details...</Text>
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading {type} details...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen
         options={{
           title: `${type} Details`,
           headerBackTitle: 'Home',
+          headerStyle: {
+            backgroundColor: theme.colors.surface,
+          },
+          headerTintColor: theme.colors.text,
+          headerTitleStyle: {
+            color: theme.colors.text,
+          },
         }}
       />
       
@@ -129,21 +152,21 @@ export default function ExpenseDetailsScreen() {
         <View style={styles.content}>
           {/* Header Card */}
           <View style={[styles.headerCard, { backgroundColor: EXPENSE_TYPE_COLORS[type].color }]}>
-            <Text style={styles.headerTitle}>{type} Expenses</Text>
-            <Text style={styles.headerSubtitle}>{formatMonth()}</Text>
+            <Text style={[styles.headerTitle, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>{type} Expenses</Text>
+            <Text style={[styles.headerSubtitle, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>{formatMonth()}</Text>
             
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Allocated</Text>
-                <Text style={styles.statValue}>₹{Number(allocated).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+                <Text style={[styles.statLabel, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>Allocated</Text>
+                <Text style={[styles.statValue, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>₹{Number(allocated).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Spent</Text>
-                <Text style={styles.statValue}>₹{Number(spent).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+                <Text style={[styles.statLabel, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>Spent</Text>
+                <Text style={[styles.statValue, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>₹{Number(spent).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Remaining</Text>
-                <Text style={styles.statValue}>₹{Number(remaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+                <Text style={[styles.statLabel, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>Remaining</Text>
+                <Text style={[styles.statValue, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>₹{Number(remaining).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
               </View>
             </View>
             
@@ -156,58 +179,58 @@ export default function ExpenseDetailsScreen() {
                   ]} 
                 />
               </View>
-              <Text style={styles.progressText}>{Math.round(progressPercentage)}% used</Text>
+              <Text style={[styles.progressText, { color: getHeaderTextColor(EXPENSE_TYPE_COLORS[type].color, theme.isDark) }]}>{Math.round(progressPercentage)}% used</Text>
             </View>
           </View>
           
           {/* Spending Breakdown Section */}
-          <View style={styles.breakdownSection}>
-            <Text style={styles.sectionTitle}>Spending Breakdown</Text>
+          <View style={[styles.breakdownSection, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Spending Breakdown</Text>
             {categoryBreakdown.length > 0 ? (
               categoryBreakdown.map((item, index) => (
-                <View key={item.category} style={styles.breakdownItem}>
+                <View key={item.category} style={[styles.breakdownItem, { borderBottomColor: theme.colors.border }]}>
                   <View style={styles.breakdownLeft}>
                     <View style={[styles.colorIndicator, { backgroundColor: item.color }]} />
-                    <Text style={styles.categoryName}>{item.category}</Text>
+                    <Text style={[styles.categoryName, { color: theme.colors.text }]}>{item.category}</Text>
                   </View>
                   <View style={styles.breakdownRight}>
-                    <Text style={styles.categoryAmount}>₹{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
-                    <Text style={styles.categoryPercentage}>{Math.round(item.percentage)}%</Text>
+                    <Text style={[styles.categoryAmount, { color: theme.colors.text }]}>₹{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+                    <Text style={[styles.categoryPercentage, { color: theme.colors.textSecondary }]}>{Math.round(item.percentage)}%</Text>
                   </View>
                 </View>
               ))
             ) : (
               <View style={styles.emptyBreakdown}>
-                <Text style={styles.emptyText}>No expenses recorded</Text>
-                <Text style={styles.emptySubtext}>Start adding expenses to see the breakdown</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No expenses recorded</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Start adding expenses to see the breakdown</Text>
               </View>
             )}
           </View>
           
           {/* Recent Expenses */}
-          <View style={styles.recentSection}>
-            <Text style={styles.sectionTitle}>Recent Expenses</Text>
+          <View style={[styles.recentSection, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Expenses</Text>
             {expenses.length > 0 ? (
               expenses
                 .slice(0, 10)
                 .map((expense) => (
-                  <View key={expense.expense_id} style={styles.expenseItem}>
+                  <View key={expense.expense_id} style={[styles.expenseItem, { borderBottomColor: theme.colors.border }]}>
                     <View style={styles.expenseInfo}>
-                      <Text style={styles.expenseCategory}>{expense.category_name || 'Unknown'}</Text>
-                      <Text style={styles.expenseDate}>
+                      <Text style={[styles.expenseCategory, { color: theme.colors.text }]}>{expense.category_name || 'Unknown'}</Text>
+                      <Text style={[styles.expenseDate, { color: theme.colors.textSecondary }]}>
                         {databaseService.parseIdToDate(expense.date).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
                         })}
                       </Text>
                     </View>
-                    <Text style={styles.expenseAmount}>₹{Number(expense.amount / expense.split).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
+                    <Text style={[styles.expenseAmount, { color: theme.colors.text }]}>₹{Number(expense.amount / expense.split).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}</Text>
                   </View>
                 ))
             ) : (
               <View style={styles.emptyExpenses}>
-                <Text style={styles.emptyText}>No expenses found</Text>
-                <Text style={styles.emptySubtext}>Add your first {type.toLowerCase()} expense</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No expenses found</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Add your first {type.toLowerCase()} expense</Text>
               </View>
             )}
           </View>
@@ -220,7 +243,6 @@ export default function ExpenseDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   loadingContainer: {
     flex: 1,
@@ -231,7 +253,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
   },
   scrollView: {
@@ -248,12 +269,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: 'white',
     opacity: 0.9,
     marginBottom: 24,
   },
@@ -267,7 +286,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: 'white',
     opacity: 0.8,
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -276,7 +294,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
   },
   progressContainer: {
     marginTop: 8,
@@ -295,12 +312,10 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
-    color: 'white',
     opacity: 0.9,
     textAlign: 'center',
   },
   breakdownSection: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -313,7 +328,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 16,
   },
   breakdownItem: {
@@ -322,7 +336,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   breakdownLeft: {
     flexDirection: 'row',
@@ -338,7 +351,6 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
     flex: 1,
   },
   breakdownRight: {
@@ -347,12 +359,10 @@ const styles = StyleSheet.create({
   categoryAmount: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 2,
   },
   categoryPercentage: {
     fontSize: 12,
-    color: '#666',
   },
   emptyBreakdown: {
     alignItems: 'center',
@@ -361,16 +371,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 4,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
     textAlign: 'center',
   },
   recentSection: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     elevation: 2,
@@ -385,7 +392,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   expenseInfo: {
     flex: 1,
@@ -393,17 +399,14 @@ const styles = StyleSheet.create({
   expenseCategory: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
     marginBottom: 2,
   },
   expenseDate: {
     fontSize: 12,
-    color: '#666',
   },
   expenseAmount: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
   },
   emptyExpenses: {
     alignItems: 'center',

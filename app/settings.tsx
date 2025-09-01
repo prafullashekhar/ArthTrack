@@ -1,17 +1,76 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, ThemeMode } from '@/store/themeStore';
+import { databaseService } from '@/services/databaseService';
 
 export default function SettingsScreen() {
   const { theme, themeMode, setThemeMode } = useTheme();
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFilter, setExportFilter] = useState<'all' | 'current-month' | 'custom-month'>('all');
+  const [selectedMonth, setSelectedMonth] = useState('');
   
   const handleThemeChange = (mode: ThemeMode) => {
     setThemeMode(mode);
     setShowThemeModal(false);
+  };
+
+  const handleExport = async () => {
+    try {
+      let expenses: any[] = [];
+      
+      if (exportFilter === 'all') {
+        expenses = await databaseService.getAllExpenses();
+      } else if (exportFilter === 'current-month') {
+        const currentMonthId = databaseService.getCurrentMonthId();
+        expenses = await databaseService.getExpensesByMonth(currentMonthId);
+      } else if (exportFilter === 'custom-month' && selectedMonth) {
+        expenses = await databaseService.getExpensesByMonth(selectedMonth);
+      }
+
+      if (expenses.length === 0) {
+        Alert.alert('No Data', 'No expenses found for the selected filter.');
+        return;
+      }
+
+      // Format expenses for export
+      const exportData = expenses.map(expense => ({
+        date: databaseService.parseIdToDate(expense.date).toLocaleDateString('en-IN'),
+        expenseType: expense.expense_type,
+        amount: expense.amount,
+        categoryName: expense.category_name || 'Unknown',
+        paymentType: expense.payment_type_name || 'Unknown',
+        note: expense.note || ''
+      }));
+
+      // Create CSV content
+      const csvHeaders = 'Date,Expense Type,Amount,Category Name,Payment Type,Note\n';
+      const csvRows = exportData.map(row => 
+        `"${row.date}","${row.expenseType}","${row.amount}","${row.categoryName}","${row.paymentType}","${row.note}"`
+      ).join('\n');
+      const csvContent = csvHeaders + csvRows;
+
+      // For now, we'll show the data in an alert (in a real app, you'd use a file sharing library)
+      Alert.alert(
+        'Export Ready',
+        `Found ${expenses.length} expenses.\n\nCSV data:\n${csvContent.substring(0, 500)}${csvContent.length > 500 ? '...' : ''}`,
+        [
+          { text: 'Copy to Clipboard', onPress: () => {
+            // In a real app, you'd copy to clipboard or share the file
+            Alert.alert('Success', 'Data copied to clipboard (placeholder)');
+          }},
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Export error:', error);
+      Alert.alert('Export Error', 'Failed to export expenses. Please try again.');
+    }
   };
   
   const getThemeModeLabel = (mode: ThemeMode) => {
@@ -51,12 +110,19 @@ export default function SettingsScreen() {
       icon: 'palette',
       onPress: () => setShowThemeModal(true),
     },
+    {
+      id: 'export',
+      title: 'Export Expenses',
+      subtitle: 'Export to Excel/Google Sheets',
+      icon: 'download',
+      onPress: () => setShowExportModal(true),
+    },
   ];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View
-        style={styles.header}
+        style={[styles.header, { borderBottomColor: theme.colors.border }]}
       >
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Settings</Text>
       </View>
@@ -127,6 +193,108 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Export Modal */}
+      <Modal
+        visible={showExportModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowExportModal(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Export Expenses</Text>
+            <TouchableOpacity onPress={() => setShowExportModal(false)}>
+              <Text style={[styles.modalClose, { color: theme.colors.primary }]}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.exportContent}>
+            <Text style={[styles.exportLabel, { color: theme.colors.text }]}>Select Export Range:</Text>
+            
+            {/* Export Filter Options */}
+            <View style={styles.filterOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.filterOption,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                  exportFilter === 'all' && { borderColor: theme.colors.primary, borderWidth: 2 }
+                ]}
+                onPress={() => setExportFilter('all')}
+              >
+                <Text style={[
+                  styles.filterOptionText,
+                  { color: exportFilter === 'all' ? theme.colors.primary : theme.colors.text }
+                ]}>All Expenses</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.filterOption,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                  exportFilter === 'current-month' && { borderColor: theme.colors.primary, borderWidth: 2 }
+                ]}
+                onPress={() => setExportFilter('current-month')}
+              >
+                <Text style={[
+                  styles.filterOptionText,
+                  { color: exportFilter === 'current-month' ? theme.colors.primary : theme.colors.text }
+                ]}>Current Month</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.filterOption,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                  exportFilter === 'custom-month' && { borderColor: theme.colors.primary, borderWidth: 2 }
+                ]}
+                onPress={() => setExportFilter('custom-month')}
+              >
+                <Text style={[
+                  styles.filterOptionText,
+                  { color: exportFilter === 'custom-month' ? theme.colors.primary : theme.colors.text }
+                ]}>Custom Month</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Custom Month Input */}
+            {exportFilter === 'custom-month' && (
+              <View style={styles.customMonthContainer}>
+                <Text style={[styles.exportLabel, { color: theme.colors.text }]}>Enter Month (YYYYMM):</Text>
+                <TextInput
+                  style={[styles.monthInput, { 
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text
+                  }]}
+                  value={selectedMonth}
+                  onChangeText={setSelectedMonth}
+                  placeholder="202501"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  keyboardType="numeric"
+                />
+              </View>
+            )}
+
+            {/* Export Button */}
+            <TouchableOpacity
+              style={[
+                styles.exportButton,
+                { backgroundColor: theme.colors.primary },
+                (exportFilter === 'custom-month' && !selectedMonth) && { opacity: 0.5 }
+              ]}
+              onPress={handleExport}
+              disabled={exportFilter === 'custom-month' && !selectedMonth}
+            >
+              <Text style={styles.exportButtonText}>Export to CSV</Text>
+            </TouchableOpacity>
+
+            <Text style={[styles.exportNote, { color: theme.colors.textSecondary }]}>
+              Export will include: Date, Expense Type, Amount, Category Name, Payment Type, Note
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -138,7 +306,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'transparent',
   },
   headerTitle: {
     fontSize: 24,
@@ -233,5 +400,54 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  exportContent: {
+    flex: 1,
+    padding: 20,
+  },
+  exportLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  filterOptions: {
+    marginBottom: 20,
+  },
+  filterOption: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  filterOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  customMonthContainer: {
+    marginBottom: 20,
+  },
+  monthInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    marginTop: 8,
+  },
+  exportButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  exportButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  exportNote: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
